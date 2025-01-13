@@ -1,8 +1,4 @@
 !define PRODUCT "Tribler"
-; Laurens, 2016-03-14: The __GIT__ string will be replaced by update_version_from_git.py
-; with the current version of the build.
-!define VERSION "__GIT__"
-; Laurens, 2016-03-14: The _x86 will be replaced by _x64 if needed in update_version_from_git.py
 !define BITVERSION "x86"
 
 !include "MUI2.nsh"
@@ -68,18 +64,12 @@ BrandingText "${PRODUCT}"
 ;--------------------------------
 ;Modern UI Configuration
 
-!define MUI_ICON "tribler_source\resources\tribler.ico"
+!define MUI_ICON "..\..\build\win\resources\tribler.ico"
 !define MUI_COMPONENTSPAGE_SMALLDESC
 !define MUI_ABORTWARNING
 
 ;--------------------------------
 ;Pages
-
-!define MUI_LICENSEPAGE_RADIOBUTTONS
-!define MUI_LICENSEPAGE_RADIOBUTTONS_TEXT_ACCEPT "I accept"
-!define MUI_LICENSEPAGE_RADIOBUTTONS_TEXT_DECLINE "I decline"
-
-!insertmacro MUI_PAGE_LICENSE "binary-LICENSE.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -121,21 +111,17 @@ Section "!Main EXE" SecMain
     ; Install MSVCR 2008, 2012 and 2015
     SetOutPath "$INSTDIR"
 
-    ; Libraries dependant on 2012 are: LibTorrent
-    ; 2019-10-24: Latest version is compiled against 2015 so we don't need this dependency here. Remove it completely
-    ; When python2 dependency is removed.
-    ; File vc_redist_110.exe
-    ; ExecWait "$INSTDIR\vc_redist_110.exe /q /norestart"
-
     ; Libraries dependant on 2015 are: Python, Qt5
-    File vc_redist_140.exe
-    ExecWait "$INSTDIR\vc_redist_140.exe /q /norestart"
+    File "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\v143\vc_redist.${BITVERSION}.exe"
+    ExecWait "$INSTDIR\vc_redist.${BITVERSION}.exe /q /norestart"
 
     FileOpen $9 "$INSTDIR\tribler.exe.log" w
     FileWrite $9 ""
     FileClose $9
-    AccessControl::GrantOnFile "$INSTDIR\tribler.exe.log" "(BU)" "FullAccess"
-    AccessControl::GrantOnFile "$INSTDIR\tribler.exe.log" "(S-1-5-32-545)" "FullAccess"
+    Exec 'icacls "$INSTDIR\tribler.exe.log" /grant *BU:F'
+    #AccessControl::GrantOnFile "$INSTDIR\tribler.exe.log" "(BU)" "FullAccess"
+    Exec 'icacls "$INSTDIR\tribler.exe.log" /grant *S-1-5-32-545:F'
+    #AccessControl::GrantOnFile "$INSTDIR\tribler.exe.log" "(S-1-5-32-545)" "FullAccess"
 
     ; End
     SetOutPath "$INSTDIR"
@@ -144,6 +130,7 @@ Section "!Main EXE" SecMain
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "NoRepair" 1
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "UninstallString" "$INSTDIR\Uninstall.exe"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "InstallLocation" "$INSTDIR"
+    WriteRegStr HKCU "Software\Tribler" "" "$INSTDIR"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "DisplayVersion" '${VERSION}'
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "DisplayIcon" "$INSTDIR\${PRODUCT}.exe,0"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT}" "Publisher" "The Tribler Team"
@@ -184,14 +171,14 @@ Section "Make Default For .torrent" SecDefaultTorrent
     WriteRegBin HKCR bittorrent EditFlags 00000100
     WriteRegStr HKCR "bittorrent\shell" "" open
     WriteRegStr HKCR "bittorrent\shell\open\command" "" '"$INSTDIR\${PRODUCT}.exe" "%1"'
-    WriteRegStr HKCR "bittorrent\DefaultIcon" "" "$INSTDIR\Tribler\Main\vwxGUI\images\torrenticon.ico"
+    WriteRegStr HKCR "bittorrent\DefaultIcon" "" "$INSTDIR\tribler_source\resources\torrenticon.ico"
 SectionEnd
 
 
 Section "Make Default For magnet://" SecDefaultMagnet
     WriteRegStr HKCR "magnet" "" "URL: Magnet Link Protocol"
     WriteRegStr HKCR "magnet" "URL Protocol" ""
-    WriteRegStr HKCR "magnet\DefaultIcon" "" "$INSTDIR\Tribler\Main\vwxGUI\images\torrenticon.ico"
+    WriteRegStr HKCR "magnet\DefaultIcon" "" "$INSTDIR\tribler_source\resources\torrenticon.ico"
     WriteRegStr HKCR "magnet\shell\open\command" "" '"$INSTDIR\${PRODUCT}.exe" "%1"'
     WriteRegStr HKLM "SOFTWARE\Classes\magnet\shell\open\command" "" '"$INSTDIR\${PRODUCT}.exe" "%1"'
 SectionEnd
@@ -204,9 +191,7 @@ SectionEnd
 !insertmacro MUI_DESCRIPTION_TEXT ${SecDesk} $(DESC_SecDesk)
 !insertmacro MUI_DESCRIPTION_TEXT ${SecStart} $(DESC_SecStart)
 !insertmacro MUI_DESCRIPTION_TEXT ${SecDefaultTorrent} $(DESC_SecDefaultTorrent)
-!insertmacro MUI_DESCRIPTION_TEXT ${SecDefaultTStream} $(DESC_SecDefaultTStream)
 !insertmacro MUI_DESCRIPTION_TEXT ${SecDefaultMagnet} $(DESC_SecDefaultMagnet)
-!insertmacro MUI_DESCRIPTION_TEXT ${SecDefaultPpsp} $(DESC_SecDefaultPpsp)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;--------------------------------

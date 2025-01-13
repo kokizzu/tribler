@@ -1,128 +1,65 @@
+|doi| |openhub|
+|python_3_10| |contributors| |pr_closed| |issues_closed|
+
+
+
+|
+|
+
+.. raw:: html
+
+   <p align="center">👉 <a href="https://github.com/Tribler/tribler/releases/latest">Download the Latest Release </a> 👈</p>
+
+|
+
+*Alternative downloads:*
+
+- `flathub <https://flathub.org/apps/org.tribler.Tribler>`_ |flathub|
+
+|
+
 *******
 Tribler
 *******
-|Pytest| |docs| |Codacy| |Coverage| |contributors| |pr_closed| |issues_closed|
 
-|python_3_8| |python_3_9|
-
-|downloads_7_0| |downloads_7_1| |downloads_7_2| |downloads_7_3| |downloads_7_4|
-|downloads_7_5| |downloads_7_6| |downloads_7_7| |downloads_7_8| |downloads_7_9|
-|downloads_7_10| |downloads_7_11|
-
-|doi| |openhub| |discord|
-
-*Towards making Bittorrent anonymous and impossible to shut down.*
-
-We use our own dedicated Tor-like network for anonymous torrent downloading.
-We implemented and enhanced the `Tor protocol specifications <https://github.com/Tribler/tribler/wiki/Anonymous-Downloading-and-Streaming-specifications>`_.
-Tribler includes our own Tor-like onion routing network with hidden services based
-seeding and `end-to-end encryption <https://github.com/Tribler/tribler/wiki/Anonymous-Downloading-and-Streaming-specifications>`_.
+ Towards making Bittorrent anonymous and impossible to shut down.
 
 Tribler aims to give anonymous access to content. We are trying to make privacy, strong cryptography, and authentication the Internet norm.
 
-For the past 11 years we have been building a very robust Peer-to-Peer system.
-Today Tribler is robust: "the only way to take Tribler down is to take The Internet down" (but a single software bug could end everything).
+We implemented `our own enhanced Tor-like network for anonymous torrent downloading <https://github.com/Tribler/tribler/wiki/Anonymous-Downloading-and-Streaming-specifications>`_, with hidden services based
+seeding and end-to-end encryption.
 
-Obtaining the latest release
-============================
+Since 2004, we have been working to ensure that "the only way to take Tribler down is to take The Internet down" (but a single software bug could end everything).
 
-Just click `here <https://github.com/Tribler/tribler/releases/latest>`__ and download the latest package for your OS.
+Socials, Support and Contribution
+=================================
 
-Obtaining support
-=================
+Want to hang out with other Tribler users?
 
-If you found a bug or have a feature request, please make sure you read `our contributing page <http://tribler.readthedocs.io/en/latest/contributing.html>`_ and then `open an issue <https://github.com/Tribler/tribler/issues/new>`_. We will have a look at it ASAP.
+- Join our |discord| !
 
-Contributing
-============
+Have you found a bug or do you have a feature request?
 
-Contributions are very welcome!
-If you are interested in contributing code or otherwise, please have a look at `our contributing page <http://tribler.readthedocs.io/en/latest/contributing.html>`_.
-Have a look at the `issue tracker <https://github.com/Tribler/tribler/issues>`_ if you are looking for inspiration :).
+- If nobody else has already, `open an issue <https://github.com/Tribler/tribler/issues/new>`_!
 
+Lost in development?
 
-Running Tribler from the repository
-###################################
+- Check out our |docs| for development and building instructions!
 
-We support development on Linux, macOS and Windows. We have written
-documentation that guides you through installing the required packages when
-setting up a Tribler development environment.
+----
 
-* `Linux <http://tribler.readthedocs.io/en/latest/development/development_on_linux.html>`_
-* `Windows <http://tribler.readthedocs.io/en/latest/development/development_on_windows.html>`_
-* `macOS <http://tribler.readthedocs.io/en/latest/development/development_on_osx.html>`_
+|downloads_7_0| |downloads_7_1| |downloads_7_2| |downloads_7_3| |downloads_7_4|
+|downloads_7_5| |downloads_7_6| |downloads_7_7| |downloads_7_8| |downloads_7_9|
+|downloads_7_10| |downloads_7_11| |downloads_7_12| |downloads_7_13| |downloads_7_13_1|
+|downloads_7_14|
 
+----
 
+License
+=======
 
-Packaging Tribler
-=================
+This file is part of Tribler, Copyright 2004-2024. Tribler is licensed under the GNU General Public License, version 3 (GPL-3.0), as published by the Free Software Foundation on 29 June 2007. Tribler is free software: you can redistribute it and/or modify it under the terms of this license. Tribler is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  For more details, see the full terms and conditions in the `LICENSE.txt <LICENSE.txt>`_ file at the root of this repository, or visit https://www.gnu.org/licenses/gpl-3.0.html.
 
-We have written guides on how to package Tribler for distribution on various systems.
-
-* `Linux <http://tribler.readthedocs.io/en/latest/building/building.html>`_
-* `Windows <http://tribler.readthedocs.io/en/latest/building/building_on_windows.html>`_
-* `macOS <http://tribler.readthedocs.io/en/latest/building/building_on_osx.html>`_
-
-
-Docker support
-=================
-
-Dockerfile is provided with the source code which can be used to build the docker image.
-
-To build the docker image:
-
-.. code-block:: bash
-
-    docker build -t triblercore/triblercore:latest .
-
-
-To run the built docker image:
-
-.. code-block:: bash
-
-    docker run -p 52194:52194 --net="host" triblercore/triblercore:latest
-
-Note that by default, the REST API is bound to localhost inside the container so to
-access the APIs, network needs to be set to host (--net="host").
-
-The REST APIs are now accessible at: http://localhost:52194/docs
-
-
-**Docker Compose**
-
-Tribler core can also be started using Docker Compose. For that, a `docker-compose.yml` file is available
-on the project root directory.
-
-To run via docker compose:
-
-.. code-block:: bash
-
-    docker-compose up
-
-
-To run in detached mode:
-
-.. code-block:: bash
-
-    docker-compose up -d
-
-
-To stop Tribler:
-
-.. code-block:: bash
-
-    docker-compose down
-
-
-Get in touch!
-=============
-
-We like to hear your feedback and suggestions. To reach out to us, you can join `our Discord server <https://discord.gg/UpPUcVGESe>`_ or create a post on `our forums <https://forum.tribler.org>`_.
-
-
-.. |jenkins_build| image:: http://jenkins-ci.tribler.org/job/Test_tribler_main/badge/icon
-    :target: http://jenkins-ci.tribler.org/job/Test_tribler_main/
-    :alt: Build status on Jenkins
 
 .. |pr_closed| image:: https://img.shields.io/github/issues-pr-closed/tribler/tribler.svg?style=flat
     :target: https://github.com/Tribler/tribler/pulls
@@ -183,6 +120,22 @@ We like to hear your feedback and suggestions. To reach out to us, you can join 
      :target: https://github.com/Tribler/tribler/releases
      :alt: Downloads(7.11.0)
 
+.. |downloads_7_12| image:: https://img.shields.io/github/downloads/tribler/tribler/v7.12.1/total.svg?style=flat
+     :target: https://github.com/Tribler/tribler/releases
+     :alt: Downloads(7.12.1)
+
+.. |downloads_7_13| image:: https://img.shields.io/github/downloads/tribler/tribler/v7.13.0/total.svg?style=flat
+     :target: https://github.com/Tribler/tribler/releases
+     :alt: Downloads(7.13.0)
+
+.. |downloads_7_13_1| image:: https://img.shields.io/github/downloads/tribler/tribler/v7.13.1/total.svg?style=flat
+     :target: https://github.com/Tribler/tribler/releases
+     :alt: Downloads(7.13.1)
+
+.. |downloads_7_14| image:: https://img.shields.io/github/downloads/tribler/tribler/v7.14.0/total.svg?style=flat
+     :target: https://github.com/Tribler/tribler/releases
+     :alt: Downloads(7.14.0)
+
 .. |contributors| image:: https://img.shields.io/github/contributors/tribler/tribler.svg?style=flat
     :target: https://github.com/Tribler/tribler/graphs/contributors
     :alt: Contributors
@@ -199,17 +152,8 @@ We like to hear your feedback and suggestions. To reach out to us, you can join 
     :target: https://discord.gg/UpPUcVGESe
     :alt: Join Discord chat
 
-.. |python_3_8| image:: https://img.shields.io/badge/python-3.8-blue.svg
+.. |python_3_10| image:: https://img.shields.io/badge/python-3.10-blue.svg
     :target: https://www.python.org/
 
-.. |python_3_9| image:: https://img.shields.io/badge/python-3.9-blue.svg
-    :target: https://www.python.org/
-
-.. |Pytest| image:: https://github.com/Tribler/tribler/actions/workflows/pytest.yml/badge.svg?branch=main
-    :target: https://github.com/Tribler
-
-.. |Codacy| image:: https://app.codacy.com/project/badge/Grade/35785b4de0b84724bffdd2598eea3276
-   :target: https://www.codacy.com/gh/Tribler/tribler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Tribler/tribler&amp;utm_campaign=Badge_Grade
-
-.. |Coverage| image:: https://app.codacy.com/project/badge/Coverage/35785b4de0b84724bffdd2598eea3276
-   :target: https://www.codacy.com/gh/Tribler/tribler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Tribler/tribler&amp;utm_campaign=Badge_Coverage
+.. |flathub| image:: https://img.shields.io/flathub/downloads/org.tribler.Tribler
+   :alt: Flathub Downloads

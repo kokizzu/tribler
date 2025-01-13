@@ -1,0 +1,58 @@
+name: Unittests
+on: [pull_request, workflow_dispatch]
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - run: python -m pip install -r requirements.txt
+      - name: Run unit tests
+        run: |
+          cd src
+          python run_unit_tests.py -a
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - uses: actions/cache/restore@v4
+        id: restore_cache
+        with:
+          path: src/libsodium.dll
+          key: cache_libsodium_dll
+      - run: python -m pip install -r requirements.txt
+      - name: Run unit tests
+        run: |
+          cd src
+          python run_unit_tests.py -a
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - shell: bash
+        run: |
+          cp /opt/homebrew/opt/libsodium/lib/libsodium.dylib /Library/Frameworks/Python.framework/Versions/3.9/lib/libsodium.dylib
+          sed -i".backup" 's|libtorrent==2.0.9|https://tribler.org/libtorrent-2.0.11-cp39-cp39-macosx_14_0_arm64.whl|' requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Run unit tests
+        run: |
+          cd src
+          python run_unit_tests.py -a
