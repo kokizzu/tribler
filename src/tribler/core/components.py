@@ -179,11 +179,18 @@ class DatabaseComponent(ComponentLauncher):
         """
         When we are done launching, register our REST API.
         """
+        from tribler.core.database.augmenter import AugmentedSearch
+
         cast("StatisticsEndpoint", session.rest_manager.get_endpoint("/api/statistics")).session = session
 
         db_endpoint = cast("DatabaseEndpoint", session.rest_manager.get_endpoint("/api/metadata"))
         db_endpoint.download_manager = session.download_manager
         db_endpoint.mds = session.mds
+        db_endpoint.augmenter = AugmentedSearch(session.config, session.notifier, community)
+
+        if db_endpoint.augmenter.needs_kickstart():
+            cast("MetadataStore", session.mds).seed_augmenter(db_endpoint.augmenter)
+            community.register_task("Seed augmenter", db_endpoint.augmenter.study)
 
     def get_endpoints(self) -> list[RESTEndpoint]:
         """

@@ -28,6 +28,7 @@ if typing.TYPE_CHECKING:
     from multidict import MultiDictProxy, MultiMapping
 
     from tribler.core.content_discovery.community import ContentDiscoveryCommunity
+    from tribler.core.database.augmenter import AugmentedSearch
     from tribler.core.database.store import MetadataStore
     from tribler.core.libtorrent.download_manager.download_manager import DownloadManager
     from tribler.core.restapi.rest_manager import TriblerRequest
@@ -81,7 +82,8 @@ class DatabaseEndpoint(RESTEndpoint):
         super().__init__(middlewares, client_max_size)
 
         self.mds: MetadataStore | None = None
-        self.required_components = ("mds", )
+        self.augmenter: AugmentedSearch | None = None
+        self.required_components = ("mds", "augmenter")
 
         self.download_manager: DownloadManager | None = None
         self.torrent_checker: TorrentChecker | None = None
@@ -308,7 +310,7 @@ class DatabaseEndpoint(RESTEndpoint):
 
         def search_db() -> tuple[list[dict], int, int]:
             with db_session:
-                pony_query = mds.get_entries(**sanitized)
+                pony_query = mds.query_with_augmenter(request.query.get("fts_text"), self.augmenter)
                 search_results = [r.to_simple_dict() for r in pony_query]
                 if include_total:
                     total = mds.get_total_count(**sanitized)

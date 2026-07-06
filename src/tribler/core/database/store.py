@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from ipv8.keyvault.keys import PrivateKey
     from pony.orm.core import Entity, Query
 
+    from tribler.core.database.augmenter import AugmentedSearch
     from tribler.core.database.orm_bindings.torrent_metadata import TorrentMetadata
     from tribler.core.notifier import Notifier
 
@@ -587,8 +588,31 @@ class MetadataStore:
             """)
         return left_join(g for g in cast("TorrentMetadata", self.TorrentMetadata) if g.rowid in fts_ids)
 
+    def apply_sort_by_option(self, query: Query, sort_by: str | None, sort_desc: bool) -> Query:
+        """
+        Interpret the user's sort_by (string) option as a pony Query transformation.
+        """
+        query = query.sort_by("desc(g.rowid)" if sort_desc else "g.rowid")
+
+        if sort_by == "HEALTH":
+            query = query.sort_by(
+                "(desc(g.health.seeders), desc(g.health.leechers))"
+                if sort_desc
+                else "(g.health.seeders, g.health.leechers)"
+            )
+        elif sort_by == "size":
+            # Remark: this can be optimized to skip cases where size field does not matter
+            # When querying for mixed channels / torrents lists, channels should have priority over torrents
+            sort_expression = "desc(g.size)" if sort_desc else "g.size"
+            query = query.sort_by(sort_expression)
+        elif sort_by:
+            sort_expression = raw_sql(f"g.{sort_by} COLLATE NOCASE" + (" DESC" if sort_desc else ""))
+            query = query.sort_by(sort_expression)
+
+        return query
+
     @db_session
-    def get_entries_query(  # noqa: C901, PLR0912, PLR0913
+    def get_entries_query(  # noqa: PLR0913
             self,
             metadata_type: int | None = None,
             channel_pk: bytes | None = None,
@@ -681,22 +705,7 @@ class MetadataStore:
                                           and g.health.last_check >= health_checked_after)
 
         # Sort the query
-        pony_query = pony_query.sort_by("desc(g.rowid)" if sort_desc else "g.rowid")
-
-        if sort_by == "HEALTH":
-            pony_query = pony_query.sort_by(
-                "(desc(g.health.seeders), desc(g.health.leechers))"
-                if sort_desc
-                else "(g.health.seeders, g.health.leechers)"
-            )
-        elif sort_by == "size":
-            # Remark: this can be optimized to skip cases where size field does not matter
-            # When querying for mixed channels / torrents lists, channels should have priority over torrents
-            sort_expression = "desc(g.size)" if sort_desc else "g.size"
-            pony_query = pony_query.sort_by(sort_expression)
-        elif sort_by:
-            sort_expression = raw_sql(f"g.{sort_by} COLLATE NOCASE" + (" DESC" if sort_desc else ""))
-            pony_query = pony_query.sort_by(sort_expression)
+        pony_query = self.apply_sort_by_option(pony_query, sort_by, sort_desc)
 
         if sort_by is None and txt_filter:
             """
@@ -836,3 +845,25 @@ class MetadataStore:
                         break
 
         return result
+
+    @db_session
+    def query_with_augmenter(self, query: str, augmenter: AugmentedSearch, first: int = 1, last: int = 50,
+                             sort_desc: bool = True, sort_by: str = "") -> list[TorrentMetadata]:
+        """
+        Use the given augmenter to perform a heavier search for the given query.
+
+        :returns: A Query object that evaluates to a list of TorrentMetadata.
+        """
+        limit, offset = max(1, last - first), max(1, first)
+        results = [r[0] for r in self.db.get_connection().execute(*augmenter.augment(query, limit, offset)).fetchall()]
+
+        pony_query = select(g for g in cast("TorrentMetadata", self.TorrentMetadata) if g.rowid in results)
+        return cast("list[TorrentMetadata]", self.apply_sort_by_option(pony_query, sort_by, sort_desc))
+
+    @db_session
+    def seed_augmenter(self, augmenter: AugmentedSearch) -> None:
+        """
+        Put some random results into our augmenter.
+        """
+        augmenter.title_window = [g.title or ""
+                                  for g in cast("TorrentMetadata", self.TorrentMetadata).select().random(10000)]
