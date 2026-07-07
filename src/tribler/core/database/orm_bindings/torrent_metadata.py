@@ -87,7 +87,10 @@ if TYPE_CHECKING:
         def get_for_update(id_: int, public_key: bytes) -> TorrentMetadata: ...  # noqa: D102
 
         @staticmethod
-        def select(selector: Callable) -> TorrentMetadata: ...  # noqa: D102
+        def random(limit: int) -> TorrentMetadata: ...  # noqa: D102
+
+        @staticmethod
+        def select(selector: Callable | None = None) -> TorrentMetadata: ...  # noqa: D102
 
         @staticmethod
         def from_payload(payload: TorrentMetadataPayload) -> TorrentMetadata: ...  # noqa: D102
