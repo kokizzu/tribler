@@ -366,7 +366,7 @@ class TestDownload(TestBase):
         download = Download(FakeTDef(), self.dlmngr, checkpoint_disabled=True,
                             config=self.create_mock_download_config())
 
-        download.process_alert(Mock(msg=None, status_code=123, url="http://google.com",
+        download.process_alert(Mock(error=Mock(message=Mock(return_value="")), status_code=123, url="http://google.com",
                                     category=Mock(return_value=libtorrent.alert.category_t.error_notification)),
                                "tracker_error_alert")
 
@@ -379,7 +379,7 @@ class TestDownload(TestBase):
         download = Download(FakeTDef(), self.dlmngr, checkpoint_disabled=True,
                             config=self.create_mock_download_config())
 
-        download.process_alert(Mock(msg=None, status_code=0, url="http://google.com",
+        download.process_alert(Mock(error=Mock(message=Mock(return_value="")), status_code=0, url="http://google.com",
                                     category=Mock(return_value=libtorrent.alert.category_t.error_notification)),
                                "tracker_error_alert")
 
@@ -392,7 +392,7 @@ class TestDownload(TestBase):
         download = Download(FakeTDef(), self.dlmngr, checkpoint_disabled=True,
                             config=self.create_mock_download_config())
 
-        download.process_alert(Mock(msg=None, status_code=-1, url="http://google.com",
+        download.process_alert(Mock(error=Mock(message=Mock(return_value="")), status_code=-1, url="http://google.com",
                                     category=Mock(return_value=libtorrent.alert.category_t.error_notification)),
                                "tracker_error_alert")
 

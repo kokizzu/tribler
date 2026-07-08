@@ -296,32 +296,6 @@ export default function General() {
 
             <div className="flex items-center space-x-2 py-2">
                 <Checkbox
-                    checked={!!settings?.libtorrent?.download_defaults?.auto_managed}
-                    id="auto_manage"
-                    onCheckedChange={(value) => {
-                        if (settings) {
-                            setSettings({
-                                ...settings,
-                                libtorrent: {
-                                    ...settings.libtorrent,
-                                    download_defaults: {
-                                        ...settings.libtorrent.download_defaults,
-                                        auto_managed: !!value,
-                                    },
-                                },
-                            });
-                        }
-                    }}
-                />
-                <label
-                    htmlFor="auto_manage"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 whitespace-nowrap">
-                    {t("AutoManageEnable")}
-                </label>
-            </div>
-
-            <div className="flex items-center space-x-2 py-2">
-                <Checkbox
                     checked={!!settings?.libtorrent?.allow_mmap}
                     onCheckedChange={(value) => {
                         if (settings) {
@@ -363,6 +337,32 @@ export default function General() {
                     htmlFor="clear_orphaned_parts"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 whitespace-nowrap">
                     {t("ClearOrphanedParts")}
+                </label>
+            </div>
+
+            <div className="flex items-center space-x-2 py-2">
+                <Checkbox
+                    checked={!!settings?.libtorrent?.download_defaults?.auto_managed}
+                    id="auto_manage"
+                    onCheckedChange={(value) => {
+                        if (settings) {
+                            setSettings({
+                                ...settings,
+                                libtorrent: {
+                                    ...settings.libtorrent,
+                                    download_defaults: {
+                                        ...settings.libtorrent.download_defaults,
+                                        auto_managed: !!value,
+                                    },
+                                },
+                            });
+                        }
+                    }}
+                />
+                <label
+                    htmlFor="auto_manage"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 whitespace-nowrap">
+                    {t("AutoManageEnable")}
                 </label>
             </div>
 
