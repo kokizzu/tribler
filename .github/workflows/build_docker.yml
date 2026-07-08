@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build-and-push-image-ghcr:
     runs-on: ubuntu-latest
-    if: ${{ contains(join(github.event.release.assets.*.name, ', '), '_x64.deb') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(join(github.event.release.assets.*.name, ', '), '_x64.deb') }}
 
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
@@ -82,7 +82,7 @@ jobs:
 
   build-and-push-image-dockerhub:
     runs-on: ubuntu-latest
-    if: ${{ contains(join(github.event.release.assets.*.name, ', '), '_x64.deb') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(join(github.event.release.assets.*.name, ', '), '_x64.deb') }}
 
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
