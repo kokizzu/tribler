@@ -596,8 +596,8 @@ class Download(TaskManager):
         self._logger.info("On tracker error alert: %s", str(alert))
         url = alert.url
 
-        if alert.msg:
-            status = "Error: " + alert.msg
+        if alert.error.message():
+            status = "Error: " + alert.error.message()
         elif alert.status_code > 0:
             status = f"HTTP status code {alert.status_code:d}"
         elif alert.status_code == 0:
@@ -914,13 +914,13 @@ class Download(TaskManager):
                 self.tracker_status.pop(removed)
             for tracker in trackers:
                 url = tracker["url"]
-                peers, status = self.tracker_status.get(url, [-1, "Not contacted yet"])
+                peers, status = cast("tuple[int, str]", self.tracker_status.get(url, [-1, "Not contacted yet"]))
                 result.append(TrackerStatusDict(
                     url=url,
-                    peers=cast("int", peers),
-                    seeds=tracker["scrape_complete"],
-                    leeches=tracker["scrape_incomplete"],
-                    status=cast("str", status)
+                    peers=peers,
+                    seeds=tracker["scrape_complete"] if peers >= 0 else peers,
+                    leeches=tracker["scrape_incomplete"]  if peers >= 0 else peers,
+                    status=status
                 ))
         except UnicodeDecodeError:
             self._logger.warning("UnicodeDecodeError in get_tracker_status")
