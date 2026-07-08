@@ -9,7 +9,7 @@
 FROM ubuntu:latest
 
 RUN apt update -y \
-  && apt -y install curl dbus-x11 libgirepository-1.0-1 libcanberra-gtk-module libcanberra-gtk3-module libglib2.0-bin
+  && apt -y install curl dbus-x11 libgirepository-1.0-1 libcanberra-gtk3-module libglib2.0-bin
 
 RUN tag=`basename $(curl -Ls -o /dev/null -w %{url_effective} https://github.com/Tribler/tribler/releases/latest)` \
   && vlesstag=$(echo $tag | cut -c2-) \
