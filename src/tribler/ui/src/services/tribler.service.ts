@@ -235,6 +235,14 @@ export class TriblerService {
         }
     }
 
+    async addDownloadDefaultTrackers(infohash: string): Promise<undefined | ErrorDict | boolean> {
+        try {
+            return (await this.http.put(`/downloads/${infohash}/default_trackers`)).data.added;
+        } catch (error) {
+            return formatAxiosError(error as Error | AxiosError);
+        }
+    }
+
     async removeDownloadTracker(infohash: string, trackerUrl: string): Promise<undefined | ErrorDict | boolean> {
         try {
             return (await this.http.delete(`/downloads/${infohash}/trackers`, {data: {url: trackerUrl}})).data.removed;

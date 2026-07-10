@@ -81,6 +81,7 @@ class DownloadsEndpoint(RESTEndpoint):
             web.patch("/{infohash}", self.update_download),
             web.get("/{infohash}/torrent", self.get_torrent),
             web.put("/{infohash}/trackers", self.add_tracker),
+            web.put("/{infohash}/default_trackers", self.add_default_trackers),
             web.delete("/{infohash}/trackers", self.remove_tracker),
             web.put("/{infohash}/tracker_force_announce", self.tracker_force_announce),
             web.get("/{infohash}/files", self.get_files),
@@ -700,7 +701,7 @@ class DownloadsEndpoint(RESTEndpoint):
     }))
     async def add_tracker(self, request: Request) -> RESTResponse:
         """
-        Return the .torrent file associated with the specified download.
+        Add a tracker to the specified torrent.
         """
         infohash = unhexlify(request.match_info["infohash"])
         download = self.download_manager.get_download(infohash)
@@ -716,14 +717,47 @@ class DownloadsEndpoint(RESTEndpoint):
                                 }}, status=HTTP_BAD_REQUEST)
 
         try:
-            download.add_trackers([url])
+            download.tdef.atp.trackers.append(url)
             handle = cast("lt.torrent_handle", download.handle)
+            # Don't use download.add_trackers here because it force_reannounces ALL trackers
+            handle.add_tracker({"url": url, "verified": False})
             handle.force_reannounce(0, len(handle.trackers()) - 1)
         except RuntimeError as e:
             return RESTResponse({"error": {
                                     "handled": True,
                                     "message": str(e)
                                 }}, status=HTTP_INTERNAL_SERVER_ERROR)
+
+        return RESTResponse({"added": True})
+
+    @docs(
+        tags=["Libtorrent"],
+        summary="Add default trackers to the specified torrent.",
+        parameters=[
+            {
+                "in": "path",
+                "name": "infohash",
+                "description": "Infohash of the download to add default trackers to",
+                "type": "string",
+                "required": True,
+            }
+        ],
+        responses={200: {"schema": schema(AddTrackerResponse={"added": Boolean}), "examples": {"added": True}}},
+    )
+    async def add_default_trackers(self, request: Request) -> RESTResponse:
+        """
+        Add default trackers to the specified torrent.
+        """
+        infohash = unhexlify(request.match_info["infohash"])
+        download = self.download_manager.get_download(infohash)
+        if not download:
+            return DownloadsEndpoint.return_404()
+
+        try:
+            download.config.add_post_handle_op(PostHandleOp.ADD_DEFAULT_TRACKERS)
+            download.schedule_post_handle_ops()
+        except RuntimeError as e:
+            return RESTResponse({"error": {"handled": True, "message": str(e)}}, status=HTTP_INTERNAL_SERVER_ERROR)
 
         return RESTResponse({"added": True})
 

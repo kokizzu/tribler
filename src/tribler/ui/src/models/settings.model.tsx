@@ -85,6 +85,7 @@ export interface Settings {
             channel_download: boolean;
             add_download_to_channel: boolean;
             trackers_file: string;
+            trackers_file_sync_url: string;
             torrent_folder: string;
             auto_managed: boolean;
         };

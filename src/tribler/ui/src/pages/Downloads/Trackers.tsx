@@ -12,7 +12,7 @@ import {isErrorDict} from "@/services/reporting";
 import {useTranslation} from "react-i18next";
 import {Icons} from "@/components/icons";
 import {ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger} from "@/components/ui/context-menu";
-import {Plus, RefreshCw, Trash} from "lucide-react";
+import {ListPlus, Plus, RefreshCw, Trash} from "lucide-react";
 
 interface TrackerRow extends Tracker {
     recheckButton: typeof Button;
@@ -75,6 +75,12 @@ export default function Trackers({download, style}: {download: Download; style?:
                         onClick={() => setTrackerDialogOpen(true)}>
                         <Plus className="w-5 mx-2" />
                         {t("Add")}..
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        className="hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                        onClick={() => triblerService.addDownloadDefaultTrackers(download.infohash)}>
+                        <ListPlus className="w-5 mx-2" />
+                        {t("Add")} {t("Default")}
                     </ContextMenuItem>
                     <ContextMenuItem
                         className="hover:bg-neutral-200 dark:hover:bg-neutral-800"

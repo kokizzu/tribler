@@ -28,6 +28,7 @@ from tribler.core.libtorrent.download_manager.download_config import DownloadCon
 from tribler.core.libtorrent.download_manager.download_state import DownloadState, DownloadStatus
 from tribler.core.libtorrent.download_manager.stream import Stream
 from tribler.core.libtorrent.torrents import check_handle, get_info_from_handle, require_handle
+from tribler.core.libtorrent.uris import get_url
 from tribler.core.notifier import Notification, Notifier
 from tribler.tribler_config import TriblerConfigManager
 
@@ -131,6 +132,8 @@ class Download(TaskManager):
     """
     Download subclass that represents a libtorrent download.
     """
+
+    LAST_TRACKER_FILE_SYNC = 0.0
 
     def __init__(self,  # noqa: PLR0913
                  tdef: TorrentDef,
@@ -303,7 +306,26 @@ class Download(TaskManager):
                                              for k, v in self.tdef.get_v2_piece_indices_per_layer().items()}
         return torrent_file
 
-    def _get_default_trackers(self) -> list[str]:
+    async def sync_default_trackers_file(self, sync_url: str) -> None:
+        """
+        Synchronize the default trackers file from the default trackers URL.
+
+        Note that the LAST_TRACKER_FILE_SYNC is global because it is a file on the OS that is shared between downloads.
+        """
+        if time.time() - Download.LAST_TRACKER_FILE_SYNC > 3600.0:
+            try:
+                content = await get_url(sync_url)
+                with open(self.download_manager.config.get(  # noqa: ASYNC230 Not ideal, but necessary.
+                        "libtorrent/download_defaults/trackers_file"), "wb") as f:
+                    f.write(content)
+                cached_read.cache_clear()
+                Download.LAST_TRACKER_FILE_SYNC = time.time()
+            except Exception:
+                msg = "Failed to synchronize trackers from URL"
+                logger.exception(msg)
+                return
+
+    async def _get_default_trackers(self) -> list[str]:
         """
         Get the default trackers from the configured tracker file.
 
@@ -312,6 +334,9 @@ class Download(TaskManager):
         tracker_file = self.download_manager.config.get("libtorrent/download_defaults/trackers_file")
         if not tracker_file:
             return []
+        sync_url = self.download_manager.config.get("libtorrent/download_defaults/trackers_file_sync_url")
+        if sync_url:
+            await self.sync_default_trackers_file(sync_url)
         return cached_read(tracker_file, int(time.time())//120)
 
     async def write_backup_torrent_file(self) -> None:
@@ -341,7 +366,7 @@ class Download(TaskManager):
             return
         await self.get_handle()
         if remaining & PostHandleOp.ADD_DEFAULT_TRACKERS:
-            self.add_trackers(self._get_default_trackers())
+            self.add_trackers(await self._get_default_trackers())
             remaining -= PostHandleOp.ADD_DEFAULT_TRACKERS
             self.config.set_post_handle_ops(remaining)
         if remaining & PostHandleOp.WRITE_BACKUP_TORRENT:
