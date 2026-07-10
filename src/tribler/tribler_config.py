@@ -157,6 +157,7 @@ class DownloadDefaultsConfig(TypedDict):
     channel_download: bool
     add_download_to_channel: bool
     trackers_file: str
+    trackers_file_sync_url: str
     torrent_folder: str
     auto_managed: bool
     completed_dir: str
@@ -341,6 +342,7 @@ DEFAULT_CONFIG = {
             channel_download=False,
             add_download_to_channel=False,
             trackers_file="",
+            trackers_file_sync_url="",
             torrent_folder="",
             auto_managed=False,
             completed_dir=""),
