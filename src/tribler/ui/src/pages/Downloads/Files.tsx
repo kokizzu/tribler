@@ -6,8 +6,17 @@ import {Dispatch, MutableRefObject, SetStateAction, useEffect, useMemo, useRef, 
 import {isErrorDict} from "@/services/reporting";
 import {triblerService} from "@/services/tribler.service";
 import SimpleTable, {getHeader} from "@/components/ui/simple-table";
-import {ChevronDown, ChevronRight} from "lucide-react";
+import {ChevronDown, ChevronRight, Gauge} from "lucide-react";
 import {Checkbox} from "@/components/ui/checkbox";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuSub,
+    ContextMenuSubContent,
+    ContextMenuSubTrigger,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {Slider} from "@/components/ui/slider";
 import {filesToTree, formatBytes, getSelectedFilesFromTree} from "@/lib/utils";
 import {useTranslation} from "react-i18next";
 
@@ -87,6 +96,7 @@ async function updateFiles(
 export default function Files({download, style}: {download: Download; style?: React.CSSProperties}) {
     const {t} = useTranslation();
     const [files, setFiles] = useState<FileTreeItem[]>([]);
+    const [selectedFile, setSelectedFile] = useState<FileTreeItem | undefined>(undefined);
     const initialized = useRef(false);
 
     function OnSelectedFilesChange(row: Row<FileTreeItem>) {
@@ -133,12 +143,50 @@ export default function Files({download, style}: {download: Download; style?: Re
     if (files.length === 0) return <span className="flex pl-4 pt-2 text-muted-foreground">No files available</span>;
 
     return (
-        <SimpleTable
-            data={files}
-            style={style}
-            columns={fileColumns}
-            expandable={true}
-            storeSortingState="details-files-sorting"
-        />
+        <>
+            <ContextMenu modal={false}>
+                <ContextMenuTrigger>
+                    <SimpleTable
+                        data={files}
+                        style={style}
+                        columns={fileColumns}
+                        expandable={true}
+                        storeSortingState="details-files-sorting"
+                        allowSelect={true}
+                        allowMultiSelect={false}
+                        selectOnRightClick={true}
+                        onSelectedRowsChange={(a) => {
+                            if ((a.length == 1) && (a[0].included)) {
+                                setSelectedFile(a[0]);
+                            } else {
+                                setSelectedFile(undefined);  // Can happen if we select a tree node instead of a file.
+                            }
+                        }}
+                    />
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-64 bg-neutral-50 dark:bg-neutral-950">
+                    <ContextMenuSub>
+                        <ContextMenuSubTrigger
+                            inset
+                            disabled={selectedFile === undefined}
+                            className={`${selectedFile === undefined ? "opacity-50" : ""}`}>
+                            <Gauge className="w-4 mx-2" />
+                            {t("Priority")}
+                        </ContextMenuSubTrigger>
+                        <ContextMenuSubContent className="w-48 bg-neutral-50 dark:bg-neutral-950 p-4">
+                            <Slider defaultValue={[selectedFile?.priority || 4]} min={1} max={7} step={1}
+                            onValueCommit={(v) => {
+                                if (selectedFile !== undefined) {
+                                    triblerService.setDownloadFilePriority(download.infohash, selectedFile.index, v[0]);
+                                    setSelectedFile({...selectedFile, priority: v[0]});
+                                    updateFiles(setFiles, download, initialized);
+                                }
+                            }}>
+                            </Slider>
+                        </ContextMenuSubContent>
+                    </ContextMenuSub>
+                </ContextMenuContent>
+            </ContextMenu>
+        </>
     );
 }

@@ -7,6 +7,7 @@ export interface File {
     name: string;
     size: number;
     included: boolean;
+    priority: number;
     progress: number;
 }
 
@@ -17,6 +18,7 @@ export interface FileTreeItem {
     downloaded?: number;
     progress?: number;
     included?: CheckedState;
+    priority?: number;
     subRows?: FileTreeItem[];
 }
 

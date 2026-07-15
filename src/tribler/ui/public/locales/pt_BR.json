@@ -277,5 +277,6 @@
     "ToggleColumns": "Alternar colunas",
     "Queue": "Fila",
     "SimpleSettings": "Use configurações simples",
-    "AdvancedSettings": "Usar configurações avançadas"
+    "AdvancedSettings": "Usar configurações avançadas",
+    "Priority": "Prioridade"
 }

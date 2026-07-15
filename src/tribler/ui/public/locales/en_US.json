@@ -277,5 +277,6 @@
     "ToggleColumns": "Toggle columns",
     "Queue": "Queue",
     "SimpleSettings": "Use simple settings",
-    "AdvancedSettings": "Use advanced settings"
+    "AdvancedSettings": "Use advanced settings",
+    "Priority": "Priority"
 }

@@ -1190,6 +1190,19 @@ class Download(TaskManager):
         """
         handle.set_piece_deadline(piece, deadline, flags)
 
+    def get_file_priority(self, index: int) -> int:
+        """
+        Get the priority of a file in the download.
+        """
+        handle = self.handle
+        if handle is not None and handle.is_valid():
+            return handle.file_priority(index)
+        if 0 <= index < len(self.tdef.atp.file_priorities):
+            return self.tdef.atp.file_priorities[index]
+        logger.warning("Requested file priority for index %d outside of range %d. This should only happen in tests!",
+                       index, len(self.tdef.atp.file_priorities))
+        return 4
+
     @check_handle(cast("list[int]", []))
     def get_file_priorities(self, handle: lt.torrent_handle) -> list[int]:
         """

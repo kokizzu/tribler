@@ -55,6 +55,7 @@ class JSONFilesInfo(TypedDict):
     name: str
     size: int
     included: bool
+    priority: int
     progress: float
 
 
@@ -158,6 +159,7 @@ class DownloadsEndpoint(RESTEndpoint):
                     name=str(fn.as_posix()),
                     size=size,
                     included=(selected_files is None or file_index in selected_files),
+                    priority=download.get_file_priority(file_index),
                     progress= files_completion.get(fn, 0.0),
                 )
             )
@@ -581,6 +583,19 @@ class DownloadsEndpoint(RESTEndpoint):
                                         "message": "index out of range"
                                     }}, status=HTTP_BAD_REQUEST)
             download.set_selected_files(selected_files_list)
+
+        if "file_priority" in parameters:
+            file_index, priority = parameters["file_priority"]
+            max_index = max(download.tdef.get_file_indices())
+            if file_index < 0 or file_index > max_index:
+                return RESTResponse({"error": {"handled": True,"message": "index out of range"}},
+                                    status=HTTP_BAD_REQUEST)
+            if priority < 0 or priority > 7:
+                return RESTResponse({"error": {"handled": True,"message": "file priority out of range"}},
+                                    status=HTTP_BAD_REQUEST)
+            download.tdef.atp.file_priorities = [priority if i == file_index else p
+                                                 for i, p in enumerate(download.tdef.atp.file_priorities)]
+            download.set_file_priority(file_index, priority)
 
         if upload_limit := parameters.get("upload_limit"):
             await download.set_upload_limit(upload_limit)

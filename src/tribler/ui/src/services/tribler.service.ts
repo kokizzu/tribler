@@ -218,6 +218,18 @@ export class TriblerService {
         }
     }
 
+    async setDownloadFilePriority(
+        infohash: string,
+        index: number,
+        priority: number
+    ): Promise<undefined | ErrorDict | boolean> {
+        try {
+            return (await this.http.patch(`/downloads/${infohash}`, {file_priority: [index, priority]})).data.modified;
+        } catch (error) {
+            return formatAxiosError(error as Error | AxiosError);
+        }
+    }
+
     async removeDownload(infohash: string, removeData: boolean): Promise<undefined | ErrorDict | boolean> {
         try {
             return (await this.http.delete(`/downloads/${infohash}`, {data: {remove_data: removeData ? 1 : 0}})).data
