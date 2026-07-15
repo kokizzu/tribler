@@ -716,6 +716,26 @@ class TestDownloadsEndpoint(TestBase):
         self.assertEqual(call(str(Path(__file__).parent), libtorrent.move_flags_t.dont_replace),
                          download.handle.move_storage.call_args)
 
+    async def test_update_download_state_move_storage_same(self) -> None:
+        """
+        Test if a download reports no modification if it is "moved" to the same dirs it is already in.
+        """
+        download = self.create_mock_download()
+        download.tdef = Mock(infohash=b"\x01" * 20)
+        download.handle = Mock(is_valid=Mock(return_value=True))
+        download.config.set_dest_dir(Path(".").absolute())
+        self.download_manager.get_download = Mock(return_value=download)
+        request = MockRequest("/api/downloads/" + "01" * 20, "PATCH",
+                              {"state": "move_storage", "dest_dir": str(download.config.get_dest_dir())},
+                              {"infohash": "01" * 20})
+
+        response = await self.endpoint.update_download(request)
+        response_body_json = await response_to_json(response)
+
+        self.assertEqual(200, response.status)
+        self.assertFalse(response_body_json["modified"])
+        self.assertEqual("01" * 20, response_body_json["infohash"])
+
     async def test_update_download_nothing(self) -> None:
         """
         Test if a download can be updated with nothing.

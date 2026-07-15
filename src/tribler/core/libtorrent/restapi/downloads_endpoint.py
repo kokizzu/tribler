@@ -628,6 +628,13 @@ class DownloadsEndpoint(RESTEndpoint):
             elif state == "move_storage":
                 dest_dir = Path(parameters["dest_dir"])
                 completed_dir = Path(parameters.get("completed_dir") or dest_dir)
+                if (
+                        (download.config.get_completed_dir() == parameters.get("completed_dir"))
+                        or
+                        (parameters.get("completed_dir") is not None
+                            and download.config.get_completed_dir() == Path(parameters.get("completed_dir")))
+                ) and (download.config.get_dest_dir() == dest_dir):
+                    return RESTResponse({"modified": False, "infohash": hexlify(download.get_def().infohash).decode()})
                 if not dest_dir.exists() or not completed_dir.exists():
                     return RESTResponse({"error": {
                                             "handled": True,
