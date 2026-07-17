@@ -278,5 +278,7 @@
     "Queue": "队列",
     "SimpleSettings": "使用简单的设置",
     "AdvancedSettings": "使用高级设置",
-    "Priority": "优先事项"
+    "Priority": "优先事项",
+    "UnpauseSelect": "取消暂停选择更新",
+    "PauseSelect": "暂停选择更新"
 }

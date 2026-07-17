@@ -278,5 +278,7 @@
     "Queue": "Queue",
     "SimpleSettings": "Use simple settings",
     "AdvancedSettings": "Use advanced settings",
-    "Priority": "Priority"
+    "Priority": "Priority",
+    "UnpauseSelect": "Unpause selection updates",
+    "PauseSelect": "Pause selection updates"
 }

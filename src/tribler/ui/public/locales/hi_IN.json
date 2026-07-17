@@ -278,5 +278,7 @@
     "Queue": "कतार",
     "SimpleSettings": "सरल सेटिंग्स का प्रयोग करें",
     "AdvancedSettings": "उन्नत सेटिंग्स का उपयोग करें",
-    "Priority": "प्राथमिकता"
+    "Priority": "प्राथमिकता",
+    "UnpauseSelect": "चयन अद्यतनों को रोकें",
+    "PauseSelect": "चयन अद्यतन रोकें"
 }

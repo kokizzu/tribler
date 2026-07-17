@@ -278,5 +278,7 @@
     "Queue": "Cola",
     "SimpleSettings": "Utilice configuraciones simples",
     "AdvancedSettings": "Usar configuración avanzada",
-    "Priority": "Prioridad"
+    "Priority": "Prioridad",
+    "UnpauseSelect": "Reanudar actualizaciones de selección",
+    "PauseSelect": "Pausar actualizaciones de selección"
 }

@@ -305,9 +305,13 @@ async def main() -> bool:
         headless = parsed_args.get("server") | config.get("headless")
         if server_url:
             logger.info("Core already running at %s", server_url)
-            # Don't open a new tab if we're (a) only adding a torrent with a session open, or (b) running headless.
-            if not headless and (not torrent_uri or (initial_message is not None
-                                                     and json.loads(initial_message).get("sessions", "0") == "0")):
+            # 1. Never open a tab if we're running headless.
+            # 2.a. When starting without a torrent URI, we do a normal boot with a new tab.
+            # 2.b. OR, open a tab if we need user input to launch the download and we have no existing GUI connection.
+            if not headless and (not torrent_uri
+                                 or (initial_message is not None
+                                    and json.loads(initial_message).get("sessions", "0") == "0"
+                                    and config.get("libtorrent/ask_download_settings"))):
                 open_webbrowser_tab(server_url + f"/ui/#/downloads/all?key={config.get('api/key')}")
             # Block this process until our download has been delivered.
             if torrent_uri:
