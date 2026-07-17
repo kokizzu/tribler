@@ -129,3 +129,7 @@ th,
 .suggestions-list li:hover {
     background-color: #e9e9e9;
 }
+
+.noise tbody {
+    filter: url('#noise');
+}

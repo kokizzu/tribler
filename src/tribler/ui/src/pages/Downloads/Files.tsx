@@ -6,11 +6,12 @@ import {Dispatch, MutableRefObject, SetStateAction, useEffect, useMemo, useRef, 
 import {isErrorDict} from "@/services/reporting";
 import {triblerService} from "@/services/tribler.service";
 import SimpleTable, {getHeader} from "@/components/ui/simple-table";
-import {ChevronDown, ChevronRight, Gauge} from "lucide-react";
+import {ChevronDown, ChevronRight, Gauge, Pause, Play} from "lucide-react";
 import {Checkbox} from "@/components/ui/checkbox";
 import {
     ContextMenu,
     ContextMenuContent,
+    ContextMenuItem,
     ContextMenuSub,
     ContextMenuSubContent,
     ContextMenuSubTrigger,
@@ -93,9 +94,22 @@ async function updateFiles(
     }
 }
 
+function selectPaused(files: FileTreeItem[], selectedIndices: number[]): FileTreeItem[] {
+    // A select change occurred while paused: only update the tree cache without syncing with the Tribler core!
+    return files.map(fti => {
+        return {
+            ...fti,
+            included: selectedIndices.includes(fti.index),
+            subRows: selectPaused(fti.subRows || [], selectedIndices)
+        };
+    });
+}
+
 export default function Files({download, style}: {download: Download; style?: React.CSSProperties}) {
     const {t} = useTranslation();
     const [files, setFiles] = useState<FileTreeItem[]>([]);
+    const [paused, setPaused] = useState<boolean>(false);
+    const [changedWhilePaused, setChangedWhilePaused] = useState<boolean>(false);
     const [selectedFile, setSelectedFile] = useState<FileTreeItem | undefined>(undefined);
     const initialized = useRef(false);
 
@@ -108,15 +122,35 @@ export default function Files({download, style}: {download: Download; style?: Re
         if (shouldInclude) var selectedIndices = [...new Set(currentIndices).union(new Set(toggleIndices))];
         else var selectedIndices = [...new Set(currentIndices).difference(new Set(toggleIndices))];
 
-        triblerService.setDownloadFiles(download.infohash, selectedIndices).then((response) => {
-            if (response === undefined) {
-                toast.error(`${t("ToastErrorDownloadSetFiles")} ${t("ToastErrorGenNetworkErr")}`);
-            } else if (isErrorDict(response)) {
-                toast.error(`${t("ToastErrorDownloadSetFiles")} ${response.error.message}`);
-            }
-        });
-        updateFiles(setFiles, download, initialized);
+        if (!paused){
+            triblerService.setDownloadFiles(download.infohash, selectedIndices).then((response) => {
+                if (response === undefined) {
+                    toast.error(`${t("ToastErrorDownloadSetFiles")} ${t("ToastErrorGenNetworkErr")}`);
+                } else if (isErrorDict(response)) {
+                    toast.error(`${t("ToastErrorDownloadSetFiles")} ${response.error.message}`);
+                }
+            });
+            updateFiles(setFiles, download, initialized);
+        } else {
+            setChangedWhilePaused(true);
+            setFiles(selectPaused(files, selectedIndices));
+        }
     }
+
+    useEffect(() => {
+        // We just came out of pause and the user changed selected files.
+        if (!paused && changedWhilePaused) {
+            const selectedIndices = files.length > 0 ? getSelectedFilesFromTree(files[0]) : [];
+            triblerService.setDownloadFiles(download.infohash, selectedIndices).then((response) => {
+                if (response === undefined) {
+                    toast.error(`${t("ToastErrorDownloadSetFiles")} ${t("ToastErrorGenNetworkErr")}`);
+                } else if (isErrorDict(response)) {
+                    toast.error(`${t("ToastErrorDownloadSetFiles")} ${response.error.message}`);
+                }
+            });
+            setChangedWhilePaused(false);
+        }
+    }, [paused]);
 
     useEffect(() => {
         // Getting the files can take a lot of time, so we avoid doing this twice (due to StrictMode).
@@ -146,9 +180,25 @@ export default function Files({download, style}: {download: Download; style?: Re
         <>
             <ContextMenu modal={false}>
                 <ContextMenuTrigger>
+                    <svg className="w-0 h-0">
+                      <filter id="noise">
+                        <feTurbulence type="turbulence" baseFrequency=".04" numOctaves="3" result="rawNoise">
+                            <animate attributeName="seed" begin="0s" dur="8s" from="0" to="80" repeatCount="indefinite" />
+                        </feTurbulence>
+                        <feColorMatrix
+                          in="rawNoise" result="colNoise"
+                          type="matrix"
+                          values="1 1 1 1 0
+                                  .1 .1 .1 .1 0
+                                  0 0 0 0 0
+                                  0 0 0 .3 0" />
+                        <feComposite in="SourceGraphic" in2="colNoise" mode="soft-light" />
+                      </filter>
+                    </svg>
                     <SimpleTable
                         data={files}
                         style={style}
+                        className={paused ? "noise" : ""}
                         columns={fileColumns}
                         expandable={true}
                         storeSortingState="details-files-sorting"
@@ -165,6 +215,10 @@ export default function Files({download, style}: {download: Download; style?: Re
                     />
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-64 bg-neutral-50 dark:bg-neutral-950">
+                    <ContextMenuItem inset onClick={() => setPaused(!paused)}>
+                        {paused ? <Play className="w-4 mx-2" /> : <Pause className="w-4 mx-2" />}
+                        {paused ? t("UnpauseSelect") : t("PauseSelect")}
+                    </ContextMenuItem>
                     <ContextMenuSub>
                         <ContextMenuSubTrigger
                             inset

@@ -278,5 +278,7 @@
     "Queue": "Fila",
     "SimpleSettings": "Use configurações simples",
     "AdvancedSettings": "Usar configurações avançadas",
-    "Priority": "Prioridade"
+    "Priority": "Prioridade",
+    "UnpauseSelect": "Retomar atualizações de seleção",
+    "PauseSelect": "Pausar atualizações de seleção"
 }
