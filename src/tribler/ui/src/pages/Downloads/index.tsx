@@ -10,6 +10,7 @@ import {Card, CardHeader} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {useCallback, useEffect, useRef, useState} from "react";
+import {toast} from "react-hot-toast";
 import {useTranslation} from "react-i18next";
 import {useLocation} from "react-router-dom";
 import {useInterval} from "@/hooks/useInterval";
@@ -360,6 +361,12 @@ export default function Downloads({statusFilter}: {statusFilter: number[]}) {
                     return statusFilter.includes(download.status_code);
                 })
             );
+        }
+        if (triblerService.cliErrors > 0){
+            triblerService.emptyCLIStartDownloadErrors().then(r => {
+                if (r !== undefined && !isErrorDict(r))
+                    r.forEach(m => toast.error(`${t("ToastErrorDownloadStart")} ${m}`));
+            });
         }
     }
 

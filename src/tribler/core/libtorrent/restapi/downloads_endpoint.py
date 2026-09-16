@@ -73,11 +73,13 @@ class DownloadsEndpoint(RESTEndpoint):
         Create a new endpoint to query the status of downloads.
         """
         super().__init__()
+        self.unhandled_cli_log: list[str] = []
         self.download_manager = download_manager
         self.tunnel_community = tunnel_community
         self.app.add_routes([
             web.get("", self.get_downloads),
             web.put("", self.add_download),
+            web.get("/clierrors", self.get_unhandled_cli),
             web.delete("/{infohash}", self.delete_download),
             web.patch("/{infohash}", self.update_download),
             web.get("/{infohash}/torrent", self.get_torrent),
@@ -349,7 +351,7 @@ class DownloadsEndpoint(RESTEndpoint):
                     info["availability"] = state.get_availability()
 
             result.append(info)
-        return RESTResponse({"downloads": result, "checkpoints": checkpoints})
+        return RESTResponse({"downloads": result, "checkpoints": checkpoints, "clierrors": len(self.unhandled_cli_log)})
 
     def _post_handle_events(self, download: Download) -> None:
         """
@@ -366,6 +368,16 @@ class DownloadsEndpoint(RESTEndpoint):
             schedule_post_handle = True
         if schedule_post_handle:
             download.schedule_post_handle_ops()
+
+    def _add_err(self, error: str, cli: bool) -> str:
+        """
+        Wrap download addition error messages. Adds the error to the "unseen errors due to CLI mode"-log when in CLI
+        mode. Returns the input message for convenience.
+        """
+        if cli:
+            self.unhandled_cli_log.insert(0, error)
+            self.unhandled_cli_log = self.unhandled_cli_log[:100]
+        return error
 
     @docs(
         tags=["Libtorrent"],
@@ -420,6 +432,7 @@ class DownloadsEndpoint(RESTEndpoint):
         tdef = uri = None
         if request.content_type == "applications/x-bittorrent":
             params: dict[str, str | int | list[int]] = {}
+            cli = not not params.get("cli", False)  # noqa: SIM208
             for k, v in request.query.items():
                 if k == "anon_hops":
                     params[k] = int(v)
@@ -437,19 +450,21 @@ class DownloadsEndpoint(RESTEndpoint):
                     params["selected_files"] = packed_selected_files
                 tdef = TorrentDef.load_from_memory(lt.bencode(metainfo))
             except Exception as e:
-                return RESTResponse({"error": {"handled": True, "message": f"corrupt torrent file ({e!s})"}},
+                return RESTResponse({"error": {"handled": True,
+                                               "message": self._add_err(f"corrupt torrent file ({e!s})", cli)}},
                                     status=HTTP_INTERNAL_SERVER_ERROR)
         else:
             params = await request.json()
+            cli = not not params.get("cli", False)  # noqa: SIM208
             uri = params.get("uri")
             if not uri:
                 return RESTResponse({"error": {
                                         "handled": True,
-                                        "message": "uri parameter missing"
+                                        "message": self._add_err("uri parameter missing", cli)
                                     }}, status=HTTP_BAD_REQUEST)
 
         ask_download = self.download_manager.config.get("libtorrent/ask_download_settings")
-        if uri and params.get("cli") and ask_download:
+        if uri and cli and ask_download:
             self.download_manager.notifier.notify(Notification.ask_add_download, uri=uri)
             return RESTResponse({"started": False, "infohash": ""})
 
@@ -457,7 +472,7 @@ class DownloadsEndpoint(RESTEndpoint):
         if error:
             return RESTResponse({"error": {
                                     "handled": True,
-                                    "message": error
+                                    "message": self._add_err(error, cli)
                                 }}, status=HTTP_BAD_REQUEST)
 
         try:
@@ -471,7 +486,7 @@ class DownloadsEndpoint(RESTEndpoint):
         except Exception as e:
             return RESTResponse({"error": {
                                     "handled": True,
-                                    "message": str(e)
+                                    "message": self._add_err(str(e), cli)
                                 }}, status=HTTP_INTERNAL_SERVER_ERROR)
 
         return RESTResponse({"started": True, "infohash": hexlify(download.get_def().infohash).decode()})
@@ -668,6 +683,19 @@ class DownloadsEndpoint(RESTEndpoint):
                                     }}, status=HTTP_BAD_REQUEST)
 
         return RESTResponse({"modified": True, "infohash": hexlify(download.get_def().infohash).decode()})
+
+    @docs(
+        tags=["Libtorrent"],
+        summary="Empty the unhandled CLI errors queue.",
+        parameters=[],
+        responses={200: {"errors": ["Too bad, it broke."]}},
+    )
+    async def get_unhandled_cli(self, request: Request) -> RESTResponse:
+        """
+        Empty the unhandled CLI errors queue.
+        """
+        messages, self.unhandled_cli_log = self.unhandled_cli_log, []
+        return RESTResponse({"errors": messages})
 
     @docs(
         tags=["Libtorrent"],

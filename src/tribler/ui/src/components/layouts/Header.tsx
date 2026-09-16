@@ -11,7 +11,7 @@ import {isErrorDict} from "@/services/reporting";
 import {useInterval} from "@/hooks/useInterval";
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "../ui/dialog";
 import {useEffect, useRef, useState} from "react";
-import toast, {Toaster} from "react-hot-toast";
+import toast, {Toaster, ToastBar} from "react-hot-toast";
 import Cookies from "js-cookie";
 import {DialogDescription} from "@radix-ui/react-dialog";
 import {Ban, Loader} from "lucide-react";
@@ -190,8 +190,25 @@ export function Header() {
                 position="bottom-left"
                 toastOptions={{
                     className: "bg-accent text-foreground font-light",
+                    duration: 15000
                 }}
-            />
+            >
+            {(t) => (
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  {message}
+                  <button
+                     onClick={() => toast.dismiss(t.id)}
+                     className="text-muted-foreground hover:text-destructive">
+                     <sup>✖</sup>
+                  </button>
+                </>
+              )}
+            </ToastBar>
+          )}
+        </Toaster>
         </div>
     );
 }
