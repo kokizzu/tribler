@@ -23,6 +23,7 @@ export class TriblerService {
     // Store a cached version of the GuiSettings to prevent from having to call the server every time we need them.
     public guiSettings: GuiSettings = {};
     public version: string | undefined;
+    public cliErrors: number = 0;
 
     constructor() {
         this.http = axios.create({
@@ -67,11 +68,13 @@ export class TriblerService {
         getAvailability: boolean = false
     ): Promise<undefined | ErrorDict | Download[]> {
         try {
-            return (
+            const data = (
                 await this.http.get(
                     `/downloads?infohash=${infohash}&get_peers=${+getPeers}&get_pieces=${+getPieces}&get_availability=${+getAvailability}`
                 )
-            ).data.downloads;
+            ).data;
+            this.cliErrors = data.clierrors;
+            return data.downloads;
         } catch (error) {
             return formatAxiosError(error as Error | AxiosError);
         }
@@ -88,6 +91,14 @@ export class TriblerService {
     async startDownload(uri: string, params: DownloadConfig = {}): Promise<undefined | ErrorDict | boolean> {
         try {
             return (await this.http.put("/downloads", {...params, uri: uri})).data.started;
+        } catch (error) {
+            return formatAxiosError(error as Error | AxiosError);
+        }
+    }
+
+    async emptyCLIStartDownloadErrors(): Promise<undefined | ErrorDict | string[]> {
+        try {
+            return (await this.http.get("/downloads/clierrors")).data.errors;
         } catch (error) {
             return formatAxiosError(error as Error | AxiosError);
         }
